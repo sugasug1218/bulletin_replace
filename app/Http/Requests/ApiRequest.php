@@ -3,28 +3,19 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use App\Enums\ApiResponseType;
 
-class ApiRequest extends FormRequest
+abstract class ApiRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize()
+    protected function failedValidation(Validator $validator)
     {
-        return false;
-    }
-
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
-     */
-    public function rules()
-    {
-        return [
-            //
+        $data = [
+            'status' => ApiResponseType::PARAM_ERROR,
+            'message' => ApiResponseType::getErrorMessage(ApiResponseType::PARAM_ERROR),
+            'result' => $validator->errors()->toArray(),
         ];
+        throw new HttpResponseException(response()->json($data, ApiResponseType::BAD_REQUEST));
     }
 }

@@ -2,15 +2,12 @@
 
 namespace App\Http\Services;
 
-use App\Http\Services\ApiBaseService;
 use App\Http\Services\ResponseService;
 use App\Models\User;
-use Exception;
-use PDOException;
 use RuntimeException;
-use Illuminate\Support\Facades\DB;
+use App\Enums\ApiResponseType;
 
-class UserService extends ApiBaseService
+class UserService extends ResponseService
 {
     protected $user;
     protected $responseService;
@@ -35,45 +32,30 @@ class UserService extends ApiBaseService
         if ($data) {
             return $data;
         }
-        throw new RuntimeException($this->getErrorMessage(self::PARAM_ERROR), self::PARAM_ERROR);
+        throw new RuntimeException($this->getErrorMessage(ApiResponseType::EXISTS_ERROR), ApiResponseType::EXISTS_ERROR);
     }
 
     public function storeUserService(array $param)
     {
-        try {
-            DB::beginTransaction();
-            $res = $this->users->storeUserByRequest($param);
-            DB::commit();
-        } catch (Exception $e) {
-            DB::rollback();
-            throw new RuntimeException($this->getErrorMessage(self::UNKNOWN_ERROR), self::UNKNOWN_ERROR);
-        } catch (PDOException $e) {
-            DB::rollback();
-            throw new RuntimeException($this->getErrorMessage(self::DB_ERROR), self::DB_ERROR);
-        }
-
+        $res = $this->users->storeUserByRequest($param);
         if (!$res) {
-            $res = [];
-            $res['error'] = 'ユーザーの追加に失敗しました';
+            throw new RuntimeException(ApiResponseType::getErrorMessage(ApiResponseType::PARAM_ERROR), ApiResponseType::PARAM_ERROR);
         }
         return $res;
     }
 
+    /**
+     * ユーザー情報の更新
+     *
+     * @param array $param
+     * @param [type] $id
+     * @return array
+     */
     public function updateUserService(array $param, $id)
     {
-        try {
-            DB::beginTransaction();
-            $res = $this->users->updateUserByRequest($param, $id);
-            if (!$res) {
-                throw new RuntimeException($this->getErrorMessage(self::EXISTS_ERROR), self::EXISTS_ERROR);
-            }
-            DB::commit();
-        } catch (Exception $e) {
-            DB::rollback();
-            throw new RuntimeException($this->getErrorMessage(self::UNKNOWN_ERROR), self::UNKNOWN_ERROR);
-        } catch (PDOException $e) {
-            DB::rollback();
-            throw new RuntimeException($this->getErrorMessage(self::DB_ERROR), self::DB_ERROR);
+        $res = $this->users->updateUserByRequest($param, $id);
+        if (!$res) {
+            throw new RuntimeException(ApiResponseType::getErrorMessage(ApiResponseType::PARAM_ERROR), ApiResponseType::PARAM_ERROR);
         }
 
         return $this->getUserById($id); // 更新したデータ返却
@@ -81,22 +63,12 @@ class UserService extends ApiBaseService
 
     public function deleteUserService($id)
     {
-        try {
-            DB::beginTransaction();
-            $result = $this->users->deleteUserByRequest($id);
-            DB::commit();
-        } catch (Exception $e) {
-            DB::rollback();
-            throw new RuntimeException($this->getErrorMessage(self::UNKNOWN_ERROR), self::UNKNOWN_ERROR);
-        } catch (PDOException $e) {
-            DB::rollback();
-            throw new RuntimeException($this->getErrorMessage(self::DB_ERROR), self::DB_ERROR);
-        }
+        $result = $this->users->deleteUserByRequest($id);
         
         if ($result) {
             $res['success'] = "ユーザー削除に成功しました";
         } elseif (!$result) {
-            throw new RuntimeException($this->getErrorMessage(self::EXISTS_ERROR), self::EXISTS_ERROR);
+            throw new RuntimeException($this->getErrorMessage(ApiResponseType::EXISTS_ERROR), ApiResponseType::EXISTS_ERROR);
         }
         return $res;
     }

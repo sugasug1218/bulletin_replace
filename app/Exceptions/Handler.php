@@ -4,6 +4,10 @@ namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
+use App\Http\Services\ResponseService;
+use Exception;
+use PDOException;
+use RuntimeException;
 
 class Handler extends ExceptionHandler
 {
@@ -32,10 +36,23 @@ class Handler extends ExceptionHandler
      *
      * @return void
      */
-    public function register()
+    // public function register()
+    // {
+    //     $this->reportable(function (Throwable $e) {
+    //         //
+    //     });
+    // }
+
+    public function render($request, Throwable $exception)
     {
-        $this->reportable(function (Throwable $e) {
-            //
-        });
+        $responseService = new ResponseService();
+
+        if ($exception instanceof PDOException) {
+            return $responseService->pdoExceptionResponse();
+        } elseif ($exception instanceof RuntimeException) {
+            return $responseService->runtimeExceptionResponse($exception);
+        } elseif ($exception instanceof Exception) {
+            return $responseService->unknownErrorResponse();
+        }
     }
 }

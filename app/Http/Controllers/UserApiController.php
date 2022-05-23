@@ -3,12 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreUserRequest;
-use App\Http\Requests\UpdateUserRequest;
+use App\Http\Requests\User\StoreUserRequest;
+use App\Http\Requests\User\UpdateUserRequest;
 use App\Http\Services\ResponseService;
 use App\Http\Services\UserService;
-use RuntimeException;
-use Exception;
 use Illuminate\Http\Request;
 
 class UserApiController extends Controller
@@ -52,33 +50,19 @@ class UserApiController extends Controller
      */
     public function store(StoreUserRequest $request)
     {
-        try {
-            $param = $this->getRequestParameter($request);
-            $result = $this->userService->storeUserService($param);
-        } catch (RuntimeException $e) {
-            return $this->responseService->badRequestResponse($e);
-        } catch (Exception $e) {
-            return $this->responseService->unknownErrorResponse();
-        }
-        
+        $param = $this->getRequestParameter($request);
+        $result = $this->userService->storeUserService($param);
         return $this->responseService->successResponse($result);
     }
 
     /**
      * Display the specified resource.
-     *
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
     public function show($id)
     {
-        try {
-            $result = $this->userService->getUserById($id);
-        } catch (RuntimeException $e) {
-            return $this->responseService->badRequestResponse($e);
-        } catch (Exception $e) {
-            return $this->responseService->unknownErrorResponse();
-        }
+        $result = $this->userService->getUserById($id);
         return $this->responseService->successResponse($result);
     }
 
@@ -91,14 +75,8 @@ class UserApiController extends Controller
      */
     public function update(UpdateUserRequest $request, $id)
     {
-        try {
-            $param = $this->getRequestParameter($request, $id);
-            $result = $this->userService->updateUserService($param, $id);
-        } catch (RuntimeException $e) {
-            return $this->responseService->badRequestResponse($e);
-        } catch (Exception $e) {
-            return $this->responseService->unknownErrorResponse();
-        }
+        $param = $this->getRequestParameter($request, $id);
+        $result = $this->userService->updateUserService($param, $id);
         return $this->responseService->successResponse($result);
     }
 
@@ -111,13 +89,7 @@ class UserApiController extends Controller
      */
     public function destroy($id)
     {
-        try {
-            $result = $this->userService->deleteUserService($id);
-        } catch (RuntimeException $e) {
-            return $this->responseService->badRequestResponse($e);
-        } catch (Exception $e) {
-            return $this->responseService->unknownErrorResponse();
-        }
+        $result = $this->userService->deleteUserService($id);
         return $this->responseService->successResponse($result);
     }
 }

@@ -2,11 +2,16 @@
 
 namespace App\Http\Services;
 
-use App\Http\Services\ApiBaseService;
+use App\Enums\ApiResponseType;
 use RuntimeException;
 
-class ResponseService extends ApiBaseService
+class ResponseService
 {
+    protected function getErrorMessage(int $code)
+    {
+        return ApiResponseType::ERROR_MESSAGE[$code];
+    }
+
     /**
      * successResponse
      *
@@ -15,53 +20,42 @@ class ResponseService extends ApiBaseService
      */
     public function successResponse(array $data)
     {
-        $response = response()->json([
-            'status' => self::NO_ERROR,
-            'message' => $this->getErrorMessage(self::NO_ERROR),
+        return response()->json([
+            'status' => ApiResponseType::NO_ERROR,
+            'message' => $this->getErrorMessage(ApiResponseType::NO_ERROR),
             'result' => [
                 $data
             ]
-        ], 200);
-        return $response;
+        ], ApiResponseType::SUCCESS_RESPONSE);
     }
 
-    /**
-     * パラメータ起因のエラーレスポンス
-     *
-     * @param RuntimeException $e
-     * @return array
-     */
-    public function badRequestResponse(RuntimeException $e)
+    public function runtimeExceptionResponse(RuntimeException $e)
     {
-        $response = response()->json([
-            'status' => $e->getCode(),
-            'message' => $e->getMessage(),
-            'result' => []
-        ], 400);
-        return $response;
-    }
-
-    /**
-     * 認証エラーのレスポンス
-     *
-     * @param RuntimeException $e
-     * @return json
-     */
-    public function UnauthorizedResponse(RuntimeException $e)
-    {
-        $response = response()->json([
+        return response()->json([
             'status' => $e->getCode(),
             'message' => $e->getMessage()
-        ], 401);
-        return $response;
+        ], ApiResponseType::BAD_REQUEST);
     }
 
+
+    public function pdoExceptionResponse()
+    {
+        return response()->json([
+            'status' => ApiResponseType::DB_ERROR,
+            'message' => $this->getErrorMessage(ApiResponseType::DB_ERROR)
+        ], ApiResponseType::BAD_REQUEST);
+    }
+
+    /**
+     * 未定義のエラー
+     *
+     * @return void
+     */
     public function unknownErrorResponse()
     {
-        $response = response()->json([
-            'status' => self::UNKNOWN_ERROR,
-            'message' => $this->getErrorMessage(self::UNKNOWN_ERROR)
-        ], 400);
-        return $response;
+        return response()->json([
+            'status' => ApiResponseType::UNKNOWN_ERROR,
+            'message' => $this->getErrorMessage(ApiResponseType::UNKNOWN_ERROR)
+        ], ApiResponseType::BAD_REQUEST);
     }
 }
